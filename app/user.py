@@ -4,7 +4,7 @@ from aiogram.filters import CommandStart
 from app.states import Chat, Image
 from aiogram.fsm.context import FSMContext
 import app.keybords as kb
-from app.generators import gpt_text, gpt_image, gpt_vision
+from app.generators import gpt_text, gpt_image
 from app.database.requests import set_user, get_user, calculate
 import uuid
 import os
@@ -31,43 +31,6 @@ async def chatting(message: Message, state: FSMContext):
     if Decimal(user.balance)>0:
         await state.set_state(Chat.text)
         await message.answer('Введите ваш запрос', reply_markup=kb.cancel)
-    else:
-        await message.answer('Недостаточно средств на балансе.')
-
-
-#GPT Vision
-@user.message(Chat.text, F.photo)
-async def chat_vision(message: Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
-    logger.info(f"Получено сообщение от пользователя: {user.id}")
-    if Decimal(user.balance)>0:
-        await state.set_state(Chat.wait)
-        logger.info(f"Баланс пользователя {user.id} достаточен: {user.balance}")
-
-        file = await message.bot.get_file(message.photo[-1].file_id)
-        file_path = file.file_path
-        file_name = uuid.uuid4()
-        await message.bot.download_file(file_path, f'{file_name}.jpeg')
-        logger.info(f"Файл загружен: {file_name}")
-        
-        caption = message.text.strip() if message.text else "What is in this image?"
-        try:
-        #caption <-> text
-            response = await gpt_vision(caption, 'gpt-4o', f'{file_name}.jpeg')
-            logger.info(f"Ответ от gpt_vision: {response}")  # Логируем ответ
-            if hasattr(response, 'usage') and hasattr(response, 'response'):
-                await calculate(message.from_user.id, response.usage, 'gpt-4o', user)
-                await message.answer(response['response'])
-                logger.info(f"Ответ отправлен пользователю {user.id}: {response['response']}")
-            else:
-                logger.error(f"Неверный формат ответа: {response}")
-                await message.answer("Произошла ошибка при обработке вашего запроса. Попробуйте еще раз.")
-        except Exception as e:
-            logger.error(f"Ошибка при обработке изображения: {str(e)}")
-            await message.answer("Произошла ошибка при обработке вашего запроса. Попробуйте еще раз.")
-        finally:
-            os.remove(f'{file_name}.jpeg')
-            logger.info(f"Файл удалён: {file_name}")
     else:
         await message.answer('Недостаточно средств на балансе.')
 
@@ -117,34 +80,3 @@ async def chat_response(message: Message, state: FSMContext):
     else:
         await message.answer('Недостаточно средств на балансе.')
 
-
-
-"""@user.message(Chat.text, F.photo)
-async def chat_response(message: Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
-    logger.info(f"Получено сообщение от пользователя: {user.id}")
-    if Decimal(user.balance)>0:
-        await state.set_state(Chat.wait)
-        logger.info(f"Баланс пользователя {user.id} достаточен: {user.balance}")
-
-        file = await message.bot.get_file(message.photo[-1].file_id)
-        file_path = file.file_path
-        file_name = uuid.uuid4()
-        await message.bot.download_file(file_path, f'{file_name}.jpeg')
-        logger.info(f"Файл загружен: {file_name}")
-        
-        caption = message.text.strip() if message.text else "What is in this image?"
-        try:
-        #caption <-> text
-            response = await gpt_vision(caption, 'gpt-4o', f'{file_name}.jpeg')
-            await calculate(message.from_user.id, response['usage'], 'gpt-4o', user)
-            await message.answer(response['response'])
-            logger.info(f"Ответ отправлен пользователю {user.id}: {response['response']}")
-        except Exception as e:
-            logger.error(f"Ошибка при обработке изображения: {str(e)}")
-            await message.answer("Произошла ошибка при обработке вашего запроса. Попробуйте еще раз.")
-        finally:
-            os.remove(f'{file_name}.jpeg')
-            logger.info(f"Файл удалён: {file_name}")
-    else:
-        await message.answer('Недостаточно средств на балансе.')"""
