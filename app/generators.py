@@ -2,7 +2,7 @@ from openai import AsyncOpenAI
 from config import AITOKEN
 
 
-client = AsyncOpenAI(api_key='AITOKEN')
+client = AsyncOpenAI(api_key=AITOKEN)
 
 
 async def gpt_text(req, model):
