@@ -6,14 +6,13 @@ from aiogram.fsm.context import FSMContext
 import app.keybords as kb
 from app.generators import gpt_text, gpt_image
 from app.database.requests import set_user, get_user, calculate
-import uuid
-import os
+from decimal import Decimal
+
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-from decimal import Decimal
 
 user = Router()
 
@@ -22,7 +21,7 @@ user = Router()
 @user.message(CommandStart())
 async def cmd_start(message: Message):
     await set_user(message.from_user.id)
-    await message.answer('Добро Пожаловать!', reply_markup=kb.main)
+    await message.answer('🤖 Добро пожаловать!\n\nЯ AI GPT-4 Bot, выбери кнопку ниже и попробуй самые продвинутые ИИ модели!', reply_markup=kb.main)
 
 
 @user.message(F.text == 'Чат')
@@ -48,6 +47,10 @@ async def chat_response(message: Message, state: FSMContext):
 
 
 @user.message(Image.wait)
+async def wait_wait(message:Message):
+    await message.answer('Ваше сообщение генеируется, подождите.')
+
+
 @user.message(Chat.wait)
 async def wait_wait(message:Message):
     await message.answer('Ваше сообщение генеируется, подождите.')

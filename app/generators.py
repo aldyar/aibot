@@ -1,8 +1,11 @@
 from openai import AsyncOpenAI
 from config import AITOKEN
+import httpx
 
 
 client = AsyncOpenAI(api_key=AITOKEN)
+"""http_client=httpx.AsyncClient(proxies="http://9jLEeU:mHRnxB@45.145.57.210:10314",
+                                                   transport=httpx.HTTPTransport(local_address="0.0.0.0"))"""
 
 
 async def gpt_text(req, model):
