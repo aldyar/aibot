@@ -9,9 +9,11 @@ from config import API_KEY, MERCHANT_UUID
 
 def generate_headers(data: str) -> dict[str: Any]:
     json_dumps  = json.dumps(data)
+    print("Data used for headers (generate_headers):", json_dumps)  # Печать данных перед подписью
     sign = hashlib.md5(
         base64.b64encode(json_dumps.encode("ascii")) + API_KEY.encode("ascii")
     ).hexdigest()
+    print("Generated sign:", sign)
 
     return{"merchant": MERCHANT_UUID, "sign": sign, "content-type": "application/json"}
 

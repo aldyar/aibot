@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, BigInteger
+from sqlalchemy import ForeignKey, String, BigInteger, Integer
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from datetime import datetime
@@ -21,7 +21,6 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
     balance: Mapped[str] = mapped_column(String(15))
-
 
 class AiType(Base):
     __tablename__ = 'ai_types'
@@ -52,4 +51,4 @@ class Order(Base):
 
 async def async_main():
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        """await conn.run_sync(Base.metadata.create_all)"""
