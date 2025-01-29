@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 user = Router()
+is_button_enabled = False
 
 
 @user.message(F.text == '❌Отмена')
@@ -170,37 +171,83 @@ async def add_funds(callback_query: CallbackQuery):
     await callback_query.answer()
     await callback_query.message.answer(balance_top_up_text,reply_markup=kb.add_funds, parse_mode="Markdown")
 
-@user.callback_query(F.data == 'void')
-async def void (callback: CallbackQuery):
-    await callback.answer('🔒 Платежная система в процессе подключения.', show_alert=True)
-    #await callback.message.answer('Вы открыли каталог')
+
+@user.callback_query(F.data.in_(['amount_1', 'amount_2', 'amount_5', 'amount_10']))
+async def handle_amount_selection(callback: CallbackQuery):
+    # Извлекаем выбранную сумму из callback_data
+    selected_amount = callback.data.split('_')[1]
+
+    # Формируем сообщение с выбранной суммой
+    confirmation_text = (
+        f"💸 Вы выбрали пополнение на {selected_amount}$.\n"
+        "Для подтверждения пополнения следуйте дальнейшим инструкциям."
+    )
+
+    # Отправляем сообщение пользователю
+    await callback.answer()
+    await callback.message.answer(confirmation_text, parse_mode="Markdown")
+
+    # Здесь можно добавить логику для создания счета или дальнейших действий
+    invoice = await create_invoice(callback.from_user.id, selected_amount)
+    markup = InlineKeyboardBuilder().button(
+        text="Проверить", callback_data=f"o_{invoice['result']['uuid']}"
+    )
+
+    # Отправляем ссылку на оплату
+    await callback.message.answer(
+        f"💰 *Ваш счет успешно создан!* \n\n"
+        f"🔗 Для оплаты перейдите по следующей ссылке: [Оплатить счет]({invoice['result']['url']}) \n\n"
+        f"💳 *Используйте эту ссылку для завершения транзакции.*\n\n"
+        f"⚡ *Не забывайте проверять статус счета.*",
+        reply_markup=markup.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+@user.callback_query(F.data.startswith('o_'))
+async def check_order(query:CallbackQuery):
+    invoice = await get_invoice(query.data.split("_")[1])
+    if 'result' not in invoice:
+        await query.answer("Ошибка: не удалось получить данные по счету.")
+        await query.message.answer("Не удалось получить информацию о платеже.")
+        return
+        
+    if invoice["result"]["status"] in {"paid", "paid_over"}:
+        await query.answer()
+        await query.message.answer('Счет оплачен!')
+    else:
+        await query.answer()
+        await query.message.answer('Счет не оплачен!')
+
 
 @user.message(F.text =='Обратная связь 📩')
 async def support(message: Message):
     await message.answer('Мы всегда рядом, чтобы поддержать вас! Если у вас есть вопросы, идеи или вам просто нужна помощь — напишите нам. Мы ценим вашу обратную связь и готовы помочь в любое время!', reply_markup=kb.contact_inline)
 
+
+
+
+
+
+
 @user.message(Command('test'))
 async def test_cryptomus(message: Message):
     invoice = await create_invoice(message.from_user.id)
     markup = InlineKeyboardBuilder().button(
-        text= "Check", callback_data=f"o_{invoice['result']['uuid']}"
+        text= "Проверить", callback_data=f"o_{invoice['result']['uuid']}"
     )
 
-    await message.reply(
-        f"Ваш счёт:{invoice['result']['url']}", reply_markup=markup.as_markup()
-        )
+    await message.answer(
+        f"💰 *Ваш счет успешно создан!* \n\n"
+        f"🔗 Для оплаты перейдите по следующей ссылке: [Оплатить счет]({invoice['result']['url']}) \n\n"
+        f"💳 *Используйте эту ссылку для завершения транзакции.*\n\n"
+        f"⚡ *Не забывайте проверять статус счета.*",
+        reply_markup=markup.as_markup(),
+        parse_mode="Markdown"
+    )
     
-@user.callback_query(F.data.startswith('o_'))
-async def check_order(query:CallbackQuery):
-    invoice = await get_invoice(query.data.split('_')[1])
-    
-    if 'result' not in invoice:
-        await query.answer("Ошибка: не удалось получить данные по счету.")
-        await query.message.answer("Не удалось получить информацию о платеже.")
-        return
-    
-    if invoice["result"]["status"] == "paid":
-        await query.answer()
-        await query.message.answer('Счет оплачен!')
-    else:
-        await query.message.answer('Счет не оплачен!')
+
+@user.callback_query(F.data == 'void')
+async def void (callback: CallbackQuery):
+    await callback.answer('🔒 Платежная система в процессе подключения.', show_alert=True)
+    #await callback.message.answer('Вы открыли каталог')

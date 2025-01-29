@@ -84,3 +84,5 @@ async def get_user_lc(session, tg_id):
         tg_id, balance = user.tg_id, user.balance  # Получаем tg_id и balance
         return tg_id, balance  # Возвращаем данные
     return None  # Если пользователь не найден, возвращаем None
+
+

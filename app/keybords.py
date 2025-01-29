@@ -25,10 +25,10 @@ back_lc = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 add_funds = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text = "1$", callback_data='void' ),
-    InlineKeyboardButton(text = "2$", callback_data='void' ),
-    InlineKeyboardButton(text = "5$", callback_data='void' ),
-    InlineKeyboardButton(text = "10$", callback_data='void' )],
+    [InlineKeyboardButton(text = "1$", callback_data='amount_1' ),
+    InlineKeyboardButton(text = "2$", callback_data='amount_2' ),
+    InlineKeyboardButton(text = "5$", callback_data='amount_5' ),
+    InlineKeyboardButton(text = "10$", callback_data='amount_10' )],
     [InlineKeyboardButton(text = "🔙Назад", callback_data='backlc' )]
 
 ])
