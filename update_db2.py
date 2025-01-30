@@ -47,4 +47,4 @@ def update_database(model_path, column_name):
         print(f"Колонка {column_name} не найдена в модели {model_class.__name__}.")
 
 if __name__ == "__main__":
-    update_database('app.database.models.User', 'name')
+    update_database('app.database.models.Order', 'created_at')

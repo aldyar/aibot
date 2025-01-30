@@ -46,9 +46,10 @@ class Order(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False)  # Статус платежа
     tg_id: Mapped[int] = mapped_column(ForeignKey('users.tg_id'), nullable=False)  # ID пользователя
     amount: Mapped[str] = mapped_column(String(15), nullable=False)  # Сумма платежа
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     is_processed: Mapped[bool] = mapped_column(Boolean, default=False)  # Обработан ли платеж
-    processed_at: Mapped[datetime] = mapped_column(DateTime,nullable=False)
+    processed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
 
 
 

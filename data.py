@@ -1,0 +1,33 @@
+
+data1 = {
+    'result': {'additional_data': None,
+            'address': None,
+            'address_qr_code': None,
+            'amount': '5.00',
+            'comments': None,
+            'commission': None,
+            'created_at': '2025-01-30T10:25:12+03:00',
+            'currency': 'USD',
+            'discount': '0.00000000',
+            'discount_percent': None,
+            'expired_at': 1738225512,
+            'from': None,
+            'is_final': False,
+            'merchant_amount': None,
+            'mercuryo_payment_link': None,
+            'network': None,
+            'order_id': 'MY-TEST-ORDER-1075213318-20250130122511',
+            'payer_amount': None,
+            'payer_amount_exchange_rate': None,
+            'payer_currency': None,
+            'payment_amount': None,
+            'payment_amount_usd': '0',
+            'payment_status': 'check',
+            'status': 'paid',
+            'txid': None,
+            'updated_at': '2025-01-30T10:25:12+03:00',
+            'url': 'https://pay.cryptomus.com/pay/d3286021-3da4-4f17-8579-ed7b6b419cec',
+            'uuid': '2d3286021-3da4-4f17-8579-ed7b6b419cec'},
+ 'state': 0
+
+}

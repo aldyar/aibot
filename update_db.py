@@ -20,8 +20,8 @@ async def update_database():
 
 async def delete_database():
     async with engine.begin() as conn:
-        #await conn.execute(text("ALTER TABLE users DROP COLUMN name"))
-        await conn.execute(text("DROP TABLE IF EXISTS orders"))
+        await conn.execute(text("ALTER TABLE orders DROP COLUMN created_at"))
+        #await conn.execute(text("DROP TABLE IF EXISTS orders"))
 
 async def create_order_table():
     async with engine.begin() as conn:
@@ -29,4 +29,4 @@ async def create_order_table():
 
 
 if __name__ == "__main__":
-    asyncio.run(create_order_table())
+    asyncio.run(delete_database())

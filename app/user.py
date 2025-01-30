@@ -5,10 +5,11 @@ from app.states import Chat, Image
 from aiogram.fsm.context import FSMContext
 import app.keybords as kb
 from app.generators import gpt_text, gpt_image
-from app.database.requests import set_user, get_user, calculate_image, calculate_text, get_user_lc
+from app.database.requests import set_user, get_user, calculate_image, calculate_text, get_user_lc, create_order,check_status, update_user_balance
 from decimal import Decimal
 from aiogram.enums import ChatAction
 from app.cryptomus import create_invoice, get_invoice
+import data 
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -188,10 +189,12 @@ async def handle_amount_selection(callback: CallbackQuery):
     await callback.message.answer(confirmation_text, parse_mode="Markdown")
 
     # Здесь можно добавить логику для создания счета или дальнейших действий
+    #invoice = data.data1
     invoice = await create_invoice(callback.from_user.id, selected_amount)
     markup = InlineKeyboardBuilder().button(
         text="Проверить", callback_data=f"o_{invoice['result']['uuid']}"
     )
+    await create_order(invoice['result']['uuid'],invoice['result']['status'],callback.from_user.id,selected_amount)
 
     # Отправляем ссылку на оплату
     await callback.message.answer(
@@ -206,24 +209,30 @@ async def handle_amount_selection(callback: CallbackQuery):
 
 @user.callback_query(F.data.startswith('o_'))
 async def check_order(query:CallbackQuery):
+    #invoice = data.data1
     invoice = await get_invoice(query.data.split("_")[1])
+    order = await check_status( 'uuid',invoice['result']['uuid'] )
+
     if 'result' not in invoice:
-        await query.answer("Ошибка: не удалось получить данные по счету.")
-        await query.message.answer("Не удалось получить информацию о платеже.")
+        await query.answer("Не удалось получить данные по счету.")
+        await query.message.answer("К сожалению, не удалось получить информацию о платеже.")
         return
         
     if invoice["result"]["status"] in {"paid", "paid_over"}:
-        await query.answer()
-        await query.message.answer('Счет оплачен!')
+        if order.is_processed == False:
+            await update_user_balance(query.from_user.id, invoice['result']['uuid'],invoice['result']['amount'])
+            await query.answer()
+            await query.message.answer('Оплата прошла успешно! Сумма была зачислена на ваш баланс.')
+        else:
+            await query.message.answer('Ваши деньги уже зачислены на баланс. Спасибо за оплату!')
     else:
         await query.answer()
-        await query.message.answer('Счет не оплачен!')
+        await query.message.answer('Ваш счет еще не оплачен. Пожалуйста, завершите оплату, чтобы продолжить.')
 
 
 @user.message(F.text =='Обратная связь 📩')
 async def support(message: Message):
     await message.answer('Мы всегда рядом, чтобы поддержать вас! Если у вас есть вопросы, идеи или вам просто нужна помощь — напишите нам. Мы ценим вашу обратную связь и готовы помочь в любое время!', reply_markup=kb.contact_inline)
-
 
 
 
