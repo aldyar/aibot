@@ -9,9 +9,8 @@ from app.database.requests import set_user, get_user, calculate_image, calculate
 from decimal import Decimal
 from aiogram.enums import ChatAction
 from app.cryptomus import create_invoice, get_invoice
-import data 
+from aiogram import Bot
 
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 import logging
@@ -172,6 +171,7 @@ async def add_funds(callback_query: CallbackQuery):
     await callback_query.answer()
     await callback_query.message.answer(balance_top_up_text,reply_markup=kb.add_funds, parse_mode="Markdown")
 
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 @user.callback_query(F.data.in_(['amount_1', 'amount_2', 'amount_5', 'amount_10']))
 async def handle_amount_selection(callback: CallbackQuery):
@@ -183,6 +183,7 @@ async def handle_amount_selection(callback: CallbackQuery):
         f"💸 Вы выбрали пополнение на {selected_amount}$.\n"
         "Для подтверждения пополнения следуйте дальнейшим инструкциям."
     )
+    
 
     # Отправляем сообщение пользователю
     await callback.answer()
@@ -191,21 +192,32 @@ async def handle_amount_selection(callback: CallbackQuery):
     # Здесь можно добавить логику для создания счета или дальнейших действий
     #invoice = data.data1
     invoice = await create_invoice(callback.from_user.id, selected_amount)
-    markup = InlineKeyboardBuilder().button(
+    """markup = InlineKeyboardBuilder().button(
         text="Проверить", callback_data=f"o_{invoice['result']['uuid']}"
-    )
+    )"""
     await create_order(invoice['result']['uuid'],invoice['result']['status'],callback.from_user.id,selected_amount)
+    """    keyboard = InlineKeyboardMarkup(inline_keyboard=[  # Передаём список кнопок
+    [InlineKeyboardButton(text="Оплатить", web_app=WebAppInfo(url=invoice['result']['url']))]
+])"""
+    
+        # Создаем кнопку "Проверить"
+    check_button = InlineKeyboardButton(text="Проверить", callback_data=f"o_{invoice['result']['uuid']}")
+    # Создаем кнопку "Оплатить" через мини-приложение
+    pay_button = InlineKeyboardButton(text="📱 Оплатить (MiniApp)", web_app=WebAppInfo(url=invoice['result']['url']))
 
+    # Объединяем обе кнопки в одну клавиатуру
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [pay_button, check_button]  # Обе кнопки в одном ряду
+    ])
     # Отправляем ссылку на оплату
     await callback.message.answer(
         f"💰 *Ваш счет успешно создан!* \n\n"
         f"🔗 Для оплаты перейдите по следующей ссылке: [Оплатить счет]({invoice['result']['url']}) \n\n"
         f"💳 *Используйте эту ссылку для завершения транзакции.*\n\n"
         f"⚡ *Не забывайте проверять статус счета.*",
-        reply_markup=markup.as_markup(),
+        reply_markup=keyboard,
         parse_mode="Markdown"
     )
-
 
 @user.callback_query(F.data.startswith('o_'))
 async def check_order(query:CallbackQuery):
@@ -236,26 +248,12 @@ async def support(message: Message):
 
 
 
+@user.message(Command("test"))
+async def test_rassylka(message: Message, bot: Bot):
+    await message.answer("Рассылка запущена!")
 
 
-
-@user.message(Command('test'))
-async def test_cryptomus(message: Message):
-    invoice = await create_invoice(message.from_user.id)
-    markup = InlineKeyboardBuilder().button(
-        text= "Проверить", callback_data=f"o_{invoice['result']['uuid']}"
-    )
-
-    await message.answer(
-        f"💰 *Ваш счет успешно создан!* \n\n"
-        f"🔗 Для оплаты перейдите по следующей ссылке: [Оплатить счет]({invoice['result']['url']}) \n\n"
-        f"💳 *Используйте эту ссылку для завершения транзакции.*\n\n"
-        f"⚡ *Не забывайте проверять статус счета.*",
-        reply_markup=markup.as_markup(),
-        parse_mode="Markdown"
-    )
     
-
 @user.callback_query(F.data == 'void')
 async def void (callback: CallbackQuery):
     await callback.answer('🔒 Платежная система в процессе подключения.', show_alert=True)

@@ -31,7 +31,8 @@ async def get_user(session, tg_id):
 @connection
 async def get_users(session):
     async with async_session.begin():
-        return await session.scalars(select(User))
+        result = await session.scalars(select(User))
+        return result.all()
 
 
 @connection
